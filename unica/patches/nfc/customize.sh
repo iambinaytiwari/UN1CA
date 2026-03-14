@@ -23,6 +23,24 @@ if [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/etc/libnfc-nci-STM_ST21.con
     ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/etc/libnfc-nci-STM_ST21.conf" 0 0 644 "u:object_r:system_file:s0"
 fi
 
+if ! [ "$(GET_PROP "vendor" "ro.vendor.nfc.feature.chipname")" ] && \
+        [ ! -d "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/priv-app/NfcNci" ]; then
+	DELETE_FROM_WORK_DIR "system" "system/app/NfcRROverlayDefault"
+	DELETE_FROM_WORK_DIR "system" "system/etc/init/init.nfc.samsung.rc"
+	DELETE_FROM_WORK_DIR "system" "system/etc/nfc_key"
+	DELETE_FROM_WORK_DIR "system" "system/etc/nfc_rule_configs.xml"
+	DELETE_FROM_WORK_DIR "system" "system/etc/permissions/com.samsung.android.nfc.adapter.xml"
+	DELETE_FROM_WORK_DIR "system" "system/etc/sysconfig/preinstalled-packages-com.samsung.android.nfc.xml"
+	DELETE_FROM_WORK_DIR "system" "system/etc/permissions/NfcNci.xml"
+	DELETE_FROM_WORK_DIR "system" "system/etc/permissions/SecNfc.xml"
+	DELETE_FROM_WORK_DIR "system" "system/framework/com.samsung.android.nfc.adapter.jar"
+	DELETE_FROM_WORK_DIR "system" "system/framework/framework-nfc.jar"
+	DELETE_FROM_WORK_DIR "system" "system/priv-app/NfcNci"
+	DELETE_FROM_WORK_DIR "system" "system/priv-app/SecNfc"
+    LOG "\033[0;33m! Nothing to do\033[0m"
+    exit 0
+fi
+
 if [ "$(GET_PROP "vendor" "ro.vendor.nfc.feature.chipname")" ] && \
         ! [[ "$(GET_PROP "vendor" "ro.vendor.nfc.feature.chipname")" =~ NXP_SN100U|SLSI|STM_ST21 ]]; then
     ABORT "Unknown NFC chip name: $(GET_PROP "vendor" "ro.vendor.nfc.feature.chipname")"
