@@ -2,8 +2,6 @@ name: Build
 
 on:
   workflow_dispatch:
-  pull_request:
-  push:
     branches:
       - 'sixteen'
 
@@ -18,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [a52sxq, a73xq, b0q, g0q, m52xq, o1s, p3s, r0q, r9s, t2s]
+        target: [a54x]
 
     steps:
       - name: Checkout repo
@@ -80,4 +78,13 @@ jobs:
       - name: Build ROM
         run: |
           source ./buildenv.sh ${{ matrix.target }}
-          ./scripts/make_rom.sh
+          ./scripts/make_rom.sh --build-rom-zip
+
+      - name: Upload to GoFile
+        run: |
+          ZIP_FILE=$(find out -maxdepth 1 -type f -name "*.zip" | head -n 1)
+
+          RESPONSE=$(curl -s -F "file=@$ZIP_FILE" "https://upload-ap-hkg.gofile.io/uploadFile")
+
+          DOWNLOAD_URL=$(echo "$RESPONSE" | jq -r '.data.downloadPage')
+          echo "$DOWNLOAD_URL"
