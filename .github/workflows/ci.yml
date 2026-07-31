@@ -2,8 +2,14 @@ name: CI
 
 on:
   workflow_dispatch:
-    branches:
-      - 'sixteen'
+    inputs:
+      target:
+        description: "Target device"
+        required: true
+        default: "a54x"
+        type: choice
+        options:
+          - a54x
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -41,8 +47,7 @@ jobs:
       - name: Generate CI matrix
         id: generate-matrix
         run: |
-          matrix="$(find target -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
-            | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')"
+          matrix=$(jq -cn --arg t "${{ github.event.inputs.target }}" '[$t]')
           echo "$matrix"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
@@ -130,4 +135,13 @@ jobs:
         run: ./scripts/extract_fw.sh
 
       - name: Build ROM
-        run: ./scripts/make_rom.sh
+        run: ./scripts/make_rom.sh --build-rom-zip
+
+      - name: Upload to GoFile
+        run: |
+          ZIP_FILE=$(find out -maxdepth 1 -type f -name "*-sign.zip" | head -n 1)
+
+          RESPONSE=$(curl -s -F "file=@$ZIP_FILE" "https://upload-ap-hkg.gofile.io/uploadFile")
+
+          DOWNLOAD_URL=$(echo "$RESPONSE" | jq -r '.data.downloadPage')
+          echo "$DOWNLOAD_URL"
